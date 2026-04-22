@@ -71,6 +71,9 @@ if (!window.cordova) {
 inicializar();
 }
 
+// NOVO: Capturar compartilhamento do PWA
+capturarCompartilhamentoPWA();
+
 // 2. Adicionar event listeners para prevenir foco automático e atalhos na busca
 const btnLimpar = document.getElementById('btnLimparBusca');
 const campoBusca = document.getElementById('campoBusca');
@@ -1341,6 +1344,39 @@ overlay.remove();
 });
 }
 
+// ========== COMPARTILHAMENTO PWA ==========
+// Capturar dados quando o PWA for aberto via compartilhamento
+function capturarCompartilhamentoPWA() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const title = urlParams.get('title');
+    const text = urlParams.get('text');
+    const sharedUrl = urlParams.get('url');
+    
+    let conteudo = title || text || sharedUrl || '';
+    
+    if (conteudo) {
+        // Pequeno delay para garantir que a página carregou
+        setTimeout(() => {
+            const nomeReceita = extrairNomeReceita(conteudo);
+            const linkReceita = extrairLink(conteudo) || sharedUrl || '';
+            
+            if (nomeReceita) {
+                document.getElementById('nomeReceita').value = nomeReceita;
+            }
+            if (linkReceita) {
+                document.getElementById('linkReceita').value = linkReceita;
+            }
+            
+            if (nomeReceita || linkReceita) {
+                destacarCamposPreenchidos();
+                mostrarMensagem('Link detectado! Dê um nome para sua receita e selecione a categoria.', 'sucesso');
+            }
+        }, 500);
+    }
+}
+
+// Chamar a função quando a página carregar (JÁ EXISTE UM DOMContentLoaded, então adicionamos dentro dele)
+// Em vez de criar outro, vamos modificar o existente
 // ✅ 3. Função para marcar/desmarcar favorito
 function toggleFavorito(index) {
 const receita = receitas[index];
