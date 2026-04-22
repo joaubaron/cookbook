@@ -1,5 +1,5 @@
 {
-  "name": "CookBook - Suas Receitas",
+  "name": "CookBook",
   "short_name": "CookBook",
   "description": "Suas receitas favoritas em um só lugar",
   "start_url": "/cookbook/",
