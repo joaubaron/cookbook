@@ -8,6 +8,16 @@
   "theme_color": "#fdf0a0",
   "background_color": "#fdf0a0",
   "orientation": "portrait",
+  "share_target": {
+    "action": "/cookbook/",
+    "method": "GET",
+    "enctype": "application/x-www-form-urlencoded",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url"
+    }
+  },
   "icons": [
     {
       "src": "icons/icone-192.png",
