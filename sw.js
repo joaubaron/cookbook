@@ -1,14 +1,14 @@
-const CACHE_VERSION = '22.04.2026-1309';
+const CACHE_VERSION = '22.04.2026-1259';
 const CACHE_NAME = `cookbook-${CACHE_VERSION}`;
 
 const FILES_TO_CACHE = [
-  '/',
-  '/index.html',
-  '/style.css',
-  '/script.js',
-  '/manifest.json',
-  '/receitas.png',
-  '/cozinheiro.png',
+  '/cookbook/',
+  '/cookbook/index.html',
+  '/cookbook/style.css',
+  '/cookbook/script.js',
+  '/cookbook/manifest.json',
+  '/cookbook/receitas.png',
+  '/cookbook/cozinheiro.png',
   'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css'
 ];
 
