@@ -90,15 +90,14 @@ style="flex: 1; background: linear-gradient(135deg, #ffd54f 0%, #ffb300 100%);">
 </div>
 
 <script>
-// Registrar Service Worker para PWA
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js')
+    navigator.serviceWorker.register('/cookbook/sw.js')  // ← caminho completo
       .then(registration => {
-        console.log('ServiceWorker registrado com sucesso:', registration.scope);
+        console.log('ServiceWorker registrado:', registration.scope);
       })
       .catch(error => {
-        console.log('Falha ao registrar ServiceWorker:', error);
+        console.log('Falha:', error);
       });
   });
 }
