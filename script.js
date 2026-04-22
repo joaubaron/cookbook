@@ -1002,63 +1002,82 @@ receita.categoria.toLowerCase().includes(termo) ||
 }
 
 function exportarReceitas() {
-if (receitas.length === 0) {
-mostrarMensagem("Nenhuma receita para exportar.", "erro");
-return;
-}
+    if (receitas.length === 0) {
+        mostrarMensagem("Nenhuma receita para exportar.", "erro");
+        return;
+    }
 
-if (!window.cordova || !cordova.file) {
-mostrarMensagem("Exportação disponível apenas no app Android.", "erro");
-return;
-}
+    const now = new Date();
+    const dia = String(now.getDate()).padStart(2, '0');
+    const mes = String(now.getMonth() + 1).padStart(2, '0');
+    const ano = String(now.getFullYear()).slice(-2);
+    const hora = String(now.getHours()).padStart(2, '0');
+    const min = String(now.getMinutes()).padStart(2, '0');
 
-const now = new Date();
-const dia = String(now.getDate()).padStart(2, '0');
-const mes = String(now.getMonth() + 1).padStart(2, '0');
-const ano = String(now.getFullYear()).slice(-2);
-const hora = String(now.getHours()).padStart(2, '0');
-const min = String(now.getMinutes()).padStart(2, '0');
+    const fileName = `RECEITAS${dia}${mes}${ano}${hora}${min}.json`;
 
-const fileName = `RECEITAS${dia}${mes}${ano}${hora}${min}.json`;
+    const dadosExportacao = {
+        versao: "1.0",
+        dataExportacao: new Date().toISOString(),
+        totalReceitas: receitas.length,
+        receitas: receitas
+    };
 
-const dadosExportacao = {
-versao: "1.0",
-dataExportacao: new Date().toISOString(),
-totalReceitas: receitas.length,
-receitas: receitas
-};
+    const jsonData = JSON.stringify(dadosExportacao, null, 2);
+    const blob = new Blob([jsonData], { type: 'application/json' });
 
-const jsonData = JSON.stringify(dadosExportacao, null, 2);
-const blob = new Blob([jsonData], {
-type: 'application/json'
-});
+    // Verifica se está no Cordova (Android)
+    if (window.cordova && cordova.file) {
+        // Método para Android/Cordova
+        const directoryPath = cordova.file.externalRootDirectory + "Download/";
 
-const directoryPath = cordova.file.externalRootDirectory + "Download/";
-
-window.resolveLocalFileSystemURL(directoryPath,
-function(dirEntry) {
-salvarArquivo(dirEntry, fileName, blob);
-},
-function(error) {
-window.resolveLocalFileSystemURL(cordova.file.externalRootDirectory,
-function(rootEntry) {
-rootEntry.getDirectory("Download", {
-create: true
-},
-function(dirEntry) {
-salvarArquivo(dirEntry, fileName, blob);
-},
-function(error) {
-mostrarMensagem("Erro ao acessar sistema de arquivos. Verifique as permissões.", "erro");
-}
-);
-},
-function(error) {
-mostrarMensagem("Erro no sistema de arquivos. Verifique as permissões.", "erro");
-}
-);
-}
-);
+        window.resolveLocalFileSystemURL(directoryPath,
+            function(dirEntry) {
+                salvarArquivo(dirEntry, fileName, blob);
+            },
+            function(error) {
+                window.resolveLocalFileSystemURL(cordova.file.externalRootDirectory,
+                    function(rootEntry) {
+                        rootEntry.getDirectory("Download", { create: true },
+                            function(dirEntry) {
+                                salvarArquivo(dirEntry, fileName, blob);
+                            },
+                            function(error) {
+                                mostrarMensagem("Erro ao acessar sistema de arquivos. Verifique as permissões.", "erro");
+                            }
+                        );
+                    },
+                    function(error) {
+                        mostrarMensagem("Erro no sistema de arquivos. Verifique as permissões.", "erro");
+                    }
+                );
+            }
+        );
+    } else {
+        // Método para PWA/Navegador
+        try {
+            // Cria um link de download
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = fileName;
+            link.style.display = 'none';
+            
+            document.body.appendChild(link);
+            link.click();
+            
+            // Limpeza
+            setTimeout(() => {
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            }, 100);
+            
+            mostrarMensagem(`Arquivo "${fileName}" exportado com sucesso!`, 'sucesso');
+        } catch (error) {
+            console.error('Erro na exportação:', error);
+            mostrarMensagem("Erro ao exportar receitas. Tente novamente.", "erro");
+        }
+    }
 }
 
 function salvarArquivo(dirEntry, fileName, blob) {
