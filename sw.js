@@ -1,4 +1,4 @@
-const CACHE_VERSION = '22.04.2026-1253';
+const CACHE_VERSION = '22.04.2026-1257';
 const CACHE_NAME = `cookbook-${CACHE_VERSION}`;
 
 const FILES_TO_CACHE = [
