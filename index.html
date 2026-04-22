@@ -1,0 +1,90 @@
+﻿<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CookBook</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="container" tabindex="-1">
+<header>
+<img src="receitas.png" alt="Caderno de Receitas"style="width: 350px; height: auto; margin-top: -5px;">
+<p class="subtitle">Suas receitas favoritas em um só lugar</p>
+</header>
+
+<div class="card">
+<div id="debugInfo" class="debug-info" style="display: none;"></div>
+
+<!-- Campo de Busca -->
+<div class="search-container">
+<div class="search-group">
+<input type="text" id="campoBusca" placeholder="🔍 Buscar receitas..." oninput="filtrarReceitas()">
+<button type="button" id="btnLimparBusca" class="btn-limpar-busca" onclick="limparBusca(); return false;" style="display: none;">✕</button>
+</div>
+</div>
+
+<form id="formReceita" onsubmit="salvarReceita(event)">
+<div class="form-group">
+<label for="nomeReceita">Nome da Receita</label>
+<input type="text" id="nomeReceita" placeholder="Ex: Panacota com Calda de Morangos">
+</div>
+
+<div class="form-group">
+<label for="linkReceita">Link da Receita</label>
+<input type="text" id="linkReceita" placeholder="https://cozinhabaron.blogspot.com/2012/06/panacota-com-calda-de-morangos.html">
+</div>
+
+<div class="form-group">
+<label for="categoriaReceita">Categoria</label>
+<select id="categoriaReceita">
+<option value="">Qual a categoria?</option>
+<option value="Café">Café</option>
+<option value="Doces">Doces</option>
+<option value="Drinks">Drinks</option>
+<option value="Especial">Especial</option>
+<option value="Jantar">Jantar</option>
+<option value="Petiscos">Petiscos</option>
+<option value="Salgados">Salgados</option>
+<option value="Saudável">Saudável</option>
+</select>
+</div>
+
+<!-- Linha com 4 botões -->
+<div style="display: flex; gap: 10px; margin-top: 15px;">
+<button type="submit" class="btn btn-primary" style="flex: 1; background: linear-gradient(135deg, #6ed3a3 0%, #4ec987 100%);">Salva</button>
+<button type="button" onclick="exportarReceitas()" class="btn btn-primary" style="flex: 1; background: linear-gradient(135deg, #ffb347 0%, #ff8c37 100%);">Exporta</button>
+<button type="button" onclick="importarReceitas()" class="btn btn-primary" style="flex: 1; background: linear-gradient(135deg, #ff6b6b 0%, #ff5252 100%);">Importa</button>
+<button type="button" onclick="voltarParaInicio()" class="btn btn-primary" style="flex: 1; background: linear-gradient(135deg, #51cfb0 0%, #2dbb9d 100%);">Início</button>
+<button type="button" onclick="toggleFavoritos()" id="btnFavoritos"
+class="btn btn-primary"
+style="flex: 1; background: linear-gradient(135deg, #ffd54f 0%, #ffb300 100%);">
+❤️
+</button>
+</div>
+
+<input type="file" id="fileInput" accept=".json" style="display: none;" onchange="processarImportacao(event)">
+</form>
+
+<div style="margin: 20px 0;"></div>
+
+<div class="stats" id="stats" style="text-align: left;"></div>
+
+<!-- Abas de categorias -->
+<div class="categorias-container">
+<div class="categorias-tabs" id="categoriasTabs"></div>
+</div>
+
+<div class="card" id="listaCard"> 
+<div id="listaReceitas"></div>
+</div> 
+
+</div>
+
+<script src="cordova.js"></script>
+<script src="script.js"></script>
+
+</body>
+</html>

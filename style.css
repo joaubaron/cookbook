@@ -1,0 +1,505 @@
+﻿* {
+box-sizing: border-box;
+margin: 0;
+padding: 0;
+}
+
+body {
+font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+min-height: 100vh;
+padding: 12px;
+}
+
+.container {
+max-width: 500px;
+margin: 0 auto;
+}
+
+header {
+text-align: center;
+margin-bottom: 20px;
+}
+
+h1 {
+color: #8b3a3a;
+font-size: 1.5em;
+margin-bottom: 6px;
+}
+
+.subtitle {
+color: #a0522d;
+font-size: 0.80em;
+opacity: 0.9;
+margin-top: -8px;
+}
+
+.card {
+background: white;
+border-radius: 14px;
+padding: 16px;
+margin-bottom: 10px;
+}
+
+.form-group {
+margin-bottom: 10px;
+}
+
+#formReceita label {
+color: #8b3a3a !important;
+text-shadow:
+0.1px 0 0 #8b3a3a,
+0 0.1px 0 #8b3a3a,
+-0.1px 0 0 #8b3a3a,
+0 -0.1px 0 #8b3a3a !important;
+letter-spacing: 0.2px;
+}
+
+label {
+display: block;
+color: #8b3a3a;
+font-weight: normal;
+margin-bottom: 5px;
+font-size: 0.8em;
+}
+
+input[type="text"],
+input[type="url"],
+select {
+width: 100%;
+padding: 8px 10px;
+border: 1.5px solid #f0d0c0;
+border-radius: 8px;
+font-size: 12px;
+transition: all 0.3s;
+background: #fff9f5;
+}
+
+input:focus,
+select:focus {
+outline: none;
+border-color: #ff8c69;
+background: white;
+}
+
+/* === Botões principais (Salvar, Backup, Importar, Início) === */
+.btn {
+width: 100%;
+padding: 10px;
+border: none;
+border-radius: 8px;
+font-size: 13px;
+font-weight: 600;
+cursor: pointer;
+transition: all 0.3s;
+text-transform: uppercase;
+letter-spacing: 0.4px;
+}
+
+.btn-primary {
+font-size: 11px;
+background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+color: white;
+}
+
+.btn-primary:hover {
+transform: translateY(-2px);
+}
+
+.btn-primary:active {
+transform: translateY(0);
+}
+
+/* === Abas de categorias === */
+.categorias-container {
+margin-bottom: 15px;
+}
+
+.categorias-tabs {
+display: flex;
+flex-wrap: wrap;
+gap: 4px;
+justify-content: center;
+}
+
+.categoria-tab {
+padding: 4px 8px;
+border: 1.5px solid #f0d0c0;
+border-radius: 8px;
+background: white;
+color: #8b3a3a;
+font-size: 0.65em;
+font-weight: normal;
+cursor: pointer;
+transition: all 0.3s;
+white-space: nowrap;
+flex: 1;
+min-width: calc(20% - 4px);
+text-align: center;
+box-sizing: border-box;
+}
+
+.categoria-tab:hover {
+border-color: #ff8c69;
+transform: translateY(-2px);
+}
+
+.categoria-tab.active {
+background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+color: white;
+border-color: #ff6b6b;
+}
+
+@media (max-width: 480px) {
+.categorias-tabs {
+gap: 3px;
+}
+
+.categoria-tab {
+padding: 3px 6px;
+font-size: 0.7em;
+min-width: calc(25% - 3px);
+}
+}
+
+/* === Lista de receitas === */
+.receita-linha {
+padding: 6px 0;
+border-bottom: 1px solid #f0d0c0;
+display: flex;
+justify-content: space-between;
+align-items: center;
+gap: 6px;
+cursor: grab;
+}
+
+.receita-info {
+flex: 1;
+display: flex;
+flex-direction: column;
+gap: 3px;
+}
+
+#listaReceitas .receita-linha:first-child {
+padding-top: 0;
+}
+
+#listaReceitas .receita-linha:last-child {
+border-bottom: none;
+padding-bottom: 0;
+}
+
+.receita-nome {
+color: #7a2e2e;
+font-size: 0.7em;
+font-weight: 600;
+display: block;
+text-decoration: none;
+word-break: break-word;
+}
+
+.receita-nome:hover {
+color: #ff6b6b;
+}
+
+.receita-categoria {
+font-size: 0.6em;
+color: #999;
+background: #f5f5f5;
+padding: 2px 6px;
+border-radius: 8px;
+align-self: flex-start;
+}
+
+/* === Estado vazio === */
+.empty-state {
+text-align: center;
+padding: 25px 10px;
+color: #999;
+}
+
+.empty-state-icon {
+font-size: 3em;
+margin-bottom: 10px;
+}
+
+.empty-state-text {
+font-size: 0.7em;
+color: #a0522d;
+white-space: nowrap;
+overflow: hidden;
+text-overflow: ellipsis;
+}
+
+/* === Estatísticas === */
+.stats {
+text-align: center;
+color: #8b3a3a;
+font-weight: 600;
+margin-bottom: 12px;
+font-size: 0.8em;
+}
+
+/* === Debug === */
+.debug-info {
+background: #f0f0f0;
+padding: 6px;
+border-radius: 6px;
+margin-bottom: 10px;
+font-size: 0.75em;
+color: #666;
+max-height: 80px;
+overflow-y: auto;
+}
+
+@media (max-width: 480px) {
+h1 {
+font-size: 1.2em;
+}
+
+.card {
+padding: 10px;
+}
+
+.categorias-tabs {
+gap: 4px;
+}
+
+.categoria-tab {
+padding: 4px 8px;
+font-size: 0.7em;
+}
+}
+
+/* === Botões compactos dentro do formulário === */
+.card form div button.btn.btn-primary {
+font-size: 10px;
+padding: 6px 8px;
+border-radius: 8px;
+}
+
+/* Remove destaque de foco */
+*:focus {
+outline: none !important;
+box-shadow: none !important;
+}
+
+/* === Botões de ação nas receitas (✏️ e 🗑️) === */
+.receita-actions .btn-rename,
+.receita-actions .btn-delete {
+background: none;
+border: none;
+font-size: 16px;
+cursor: pointer;
+transition: transform 0.2s ease, opacity 0.2s ease;
+margin-left: 6px;
+color: #7b519d;
+}
+
+.receita-actions .btn-rename:hover,
+.receita-actions .btn-delete:hover {
+color: #ff8c69;
+transform: none;
+}
+
+/* === Sistema de busca === */
+.search-container {
+margin-bottom: 15px;
+}
+
+.search-group {
+position: relative;
+display: flex;
+align-items: center;
+}
+
+#campoBusca {
+width: 100%;
+padding: 10px 40px 10px 12px;
+border: 1.5px solid #f0d0c0;
+border-radius: 8px;
+font-size: 12px;
+background: #fff9f5;
+transition: all 0.3s;
+}
+
+#campoBusca:focus {
+border-color: #ff8c69;
+background: white;
+box-shadow: 0 0 0 2px rgba(255, 140, 105, 0.2);
+}
+
+#campoBusca::placeholder {
+color: #999;
+}
+
+.btn-limpar-busca {
+position: absolute;
+right: 8px;
+background: none;
+border: none;
+color: #999;
+cursor: pointer;
+padding: 2px;
+border-radius: 50%;
+transition: all 0.2s;
+font-size: 12px;
+display: flex;
+align-items: center;
+justify-content: center;
+width: 16px;
+height: 16px;
+top: 45%;
+transform: translateY(-50%);
+}
+
+.btn-limpar-busca:hover {
+background: #f0d0c0;
+color: #8b3a3a;
+}
+
+/* Indicador de busca ativa */
+.busca-ativa {
+background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%) !important;
+border-color: #6a4c93 !important;
+}
+
+/* Resultados da busca */
+.resultado-busca {
+background: #f8f9fa;
+border-left: 3px solid #6a4c93;
+}
+
+.busca-stats {
+font-size: 0.7em;
+color: #6a4c93;
+font-weight: 600;
+margin-bottom: 8px;
+text-align: center;
+padding: 4px;
+background: #f3e5f5;
+border-radius: 6px;
+}
+
+/* Destaque dos termos buscados */
+.highlight {
+background: linear-gradient(135deg, #fff9c4 0%, #ffecb3 100%);
+padding: 1px 3px;
+border-radius: 3px;
+font-weight: 700;
+color: #5d4037;
+}
+
+/* Modo busca ativa */
+.modo-busca .categorias-container {
+opacity: 0.6;
+pointer-events: none;
+}
+
+.modo-busca .categoria-tab {
+background: #f5f5f5;
+color: #999;
+}
+
+/* Animação da busca */
+@keyframes pulse {
+0% { transform: scale(1); }
+50% { transform: scale(1.05); }
+100% { transform: scale(1); }
+}
+
+.busca-destaque {
+animation: pulse 0.6s ease;
+}
+
+/* Acessibilidade */
+@media (prefers-reduced-motion: reduce) {
+* {
+animation-duration: 0.01ms !important;
+transition-duration: 0.01ms !important;
+}
+}
+
+#listaReceitas {
+animation: fadeIn 0.3s ease;
+}
+
+.loading {
+opacity: 0.6;
+pointer-events: none;
+}
+
+/* === Contador de receitas nas abas === */
+.categoria-tab {
+position: relative;
+}
+
+.categoria-count {
+position: absolute;
+top: -6px;
+left: 0;
+transform: translateX(0px);
+background: rgb(142, 0, 0);
+color: white;
+border-radius: 4px;
+padding: 2px 5px;
+font-size: 0.65em;
+font-weight: 700;
+min-width: 16px;
+height: 16px;
+display: flex;
+align-items: center;
+justify-content: center;
+border: 1px solid rgb(142, 0, 0);
+box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+z-index: 5;
+}
+
+.categoria-tab.active .categoria-count {
+background: white;
+color: rgb(142, 0, 0);
+border: 1px solid rgb(142, 0, 0);
+}
+
+@media (max-width: 480px) {
+.categoria-count {
+top: -4px;
+left: -4px;
+min-width: 14px;
+height: 14px;
+font-size: 0.55em;
+padding: 1px 3px;
+}
+}
+
+.receita-actions i {
+color: #ff8c69; /* mesma cor para lápis e lixeira */
+font-size: 16px;
+transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.receita-actions i:hover {
+color: #ff8c69;
+}
+
+/* Modo compartilhamento ativo */
+.modo-compartilhamento .card {
+border: 2px solid #6a4c93;
+background: #f3e5f5;
+}
+
+.modo-compartilhamento .form-group {
+animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+0% { opacity: 1; }
+50% { opacity: 0.8; }
+100% { opacity: 1; }
+}
+
+/* Destaque para campos preenchidos automaticamente */
+.campo-preenchido {
+background: #e8f5e8 !important;
+border-color: #4caf50 !important;
+}
