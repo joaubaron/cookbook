@@ -5,8 +5,8 @@
   "start_url": "/cookbook/",
   "scope": "/cookbook/",
   "display": "standalone",
-  "theme_color": "#eddcd1",
-  "background_color": "#eddcd1",
+  "theme_color": "#fdf0a0",
+  "background_color": "#fdf0a0",
   "orientation": "portrait",
   "share_target": {
     "action": "/cookbook/",
