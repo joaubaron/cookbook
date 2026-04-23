@@ -1,4 +1,4 @@
-const CACHE_VERSION = '23.04.2026-1230';
+const CACHE_VERSION = '23.04.2026-1228';
 const CACHE_NAME = `cookbook-${CACHE_VERSION}`;
 
 const FILES_TO_CACHE = [
@@ -9,9 +9,8 @@ const FILES_TO_CACHE = [
   '/cookbook/manifest.json',
   '/cookbook/receitas.png',
   '/cookbook/cozinheiro.png',
-  '/i/icone-192.png',
-  '/cookbook/icone-512.png',
-  
+  '/icons/icone-192.png',
+  '/icons/icone-512.png',
   'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css'
 ];
 
