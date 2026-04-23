@@ -1017,7 +1017,7 @@ function exportarReceitas() {
     const hora = String(now.getHours()).padStart(2, '0');
     const min = String(now.getMinutes()).padStart(2, '0');
 
-    const fileName = `RECEITAS${dia}${mes}${ano}${hora}${min}.json`;
+    const fileName = `cookbook${dia}${mes}${ano}${hora}${min}.json`;
 
     const dadosExportacao = {
         versao: "1.0",
