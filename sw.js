@@ -9,6 +9,9 @@ const FILES_TO_CACHE = [
   '/cookbook/manifest.json',
   '/cookbook/receitas.png',
   '/cookbook/cozinheiro.png',
+  '/i/icone-192.png',
+  '/cookbook/icone-512.png',
+  
   'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css'
 ];
 
