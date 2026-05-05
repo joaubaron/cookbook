@@ -1,4 +1,4 @@
-﻿// Constantes Globais
+// Constantes Globais
 const CATEGORIAS_PADRAO = Object.freeze([
 'Café', 'Doces', 'Drinks', 'Especial', 'Jantar', 'Petiscos', 'Salgados', 'Saudável'
 ]);
@@ -366,6 +366,13 @@ processarCompartilhamento(textoCompartilhado);
 }
 
 function inicializar() {
+// Solicita armazenamento persistente ao Android/Chrome para evitar limpeza automática
+if (navigator.storage && navigator.storage.persist) {
+navigator.storage.persist().then(granted => {
+console.log(`Storage persistente: ${granted ? '✅ protegido' : '⚠️ pode ser limpo pelo sistema'}`);
+});
+}
+
 // 1. Cria o container de mensagens (toast)
 let toastContainer = document.getElementById('toast-container');
 if (!toastContainer) {
@@ -514,6 +521,7 @@ container.focus();
 }
 
 function carregarReceitas() {
+try {
 const dados = localStorage.getItem('receitas');
 // Adiciona 'favorito: false' se a receita não tiver a propriedade, para compatibilidade
 const receitasCarregadas = dados ? JSON.parse(dados) : [];
@@ -521,6 +529,11 @@ receitas = receitasCarregadas.map(r => ({
 ...r,
 favorito: r.favorito === undefined ? false : r.favorito
 }));
+} catch (e) {
+console.error('Erro ao ler receitas do localStorage:', e);
+receitas = [];
+mostrarMensagem('⚠️ Dados não puderam ser lidos. Importe seu backup JSON.', 'erro');
+}
 invalidarCache(); // Garantir que o mapa seja criado/atualizado
 mostrarReceitas();
 }
