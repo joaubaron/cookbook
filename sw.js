@@ -1,4 +1,4 @@
-const CACHE_VERSION = '06.05.2026-0811';
+const CACHE_VERSION = '06.05.2026-0812';
 const CACHE_NAME = `cookbook-${CACHE_VERSION}`;
 
 const APP_SHELL = [
