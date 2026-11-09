@@ -1,11 +1,11 @@
-const CACHE_VERSION = '09.11.2026-0921';
+const CACHE_VERSION = '09.11.2026-1';
 const CACHE_NAME = `cookbook-${CACHE_VERSION}`;
 const BASE = self.registration.scope; // funciona em qualquer nome de pasta
 
 const APP_SHELL = [
   '', 'index.html', 'style.css', 'script.js', 'manifest.json',
   'receitas.png', 'cozinheiro.png',
-  'icons/icone-192.png', 'icons/icone-512.png'
+  'icons/icon-152.png', 'icons/icone-192.png', 'icons/icone-512.png'
 ].map(p => new URL(p, BASE).href);
 
 self.addEventListener('install', (event) => {
