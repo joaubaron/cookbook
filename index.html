@@ -2,9 +2,8 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>CookBook</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <link rel="stylesheet" href="style.css">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#ff6b6b">
@@ -18,13 +17,11 @@
 
 <div class="container" tabindex="-1">
 <header>
-<img src="receitas.png" alt="Caderno de Receitas"style="width: 350px; height: auto; margin-top: -5px;">
+<img src="receitas.png" alt="Caderno de Receitas" style="width: 350px; height: auto; margin-top: -5px;">
 <p class="subtitle">Suas receitas favoritas em um só lugar</p>
 </header>
 
 <div class="card">
-<div id="debugInfo" class="debug-info" style="display: none;"></div>
-
 <!-- Campo de Busca -->
 <div class="search-container">
 <div class="search-group">
@@ -59,13 +56,13 @@
 </select>
 </div>
 
-<!-- Linha com 4 botões -->
+<!-- Linha com 5 botões -->
 <div style="display: flex; gap: 7px; margin-top: 15px;">
 <button type="submit" class="btn btn-primary" style="flex: 1; background: linear-gradient(135deg, #6ed3a3 0%, #4ec987 100%);">Salvar</button>
-<button type="button" onclick="exportarReceitas()" class="btn btn-primary" style="flex: 1; background: linear-gradient(135deg, #ffb347 0%, #ff8c37 100%);">Exporta</button>
+<button type="button" onclick="exportarReceitas()" class="btn btn-primary" style="flex: 1; background: linear-gradient(135deg, #ffb347 0%, #ff8c37 100%);">Exportar</button>
 <button type="button" onclick="importarReceitas()" class="btn btn-primary" style="flex: 1; background: linear-gradient(135deg, #ff6b6b 0%, #ff5252 100%);">Importar</button>
 <button type="button" onclick="voltarParaInicio()" class="btn btn-primary" style="flex: 1; background: linear-gradient(135deg, #51cfb0 0%, #2dbb9d 100%);">Início</button>
-<button type="button" onclick="toggleFavoritos()" id="btnFavoritos"
+<button type="button" onclick="toggleFavoritos()" id="btnFavoritos" title="Favoritos" aria-label="Favoritos"
 class="btn btn-primary"
 style="flex: 1; background: linear-gradient(135deg, #ffd54f 0%, #ffb300 100%);">
 ❤️
@@ -89,50 +86,31 @@ style="flex: 1; background: linear-gradient(135deg, #ffd54f 0%, #ffb300 100%);">
 </div> 
 
 </div>
+</div>
 
 <script>
-// ====================== PULL-TO-REFRESH (sem scroll normal) ======================
+// Puxar para baixo no topo = atualizar a página
 let pullStartY = 0;
 let isPulling = false;
+const noTopo = () => document.querySelector('.container').scrollTop === 0;
+const podeAtualizar = () => !document.querySelector('.custom-modal-overlay') &&
+  !document.getElementById('nomeReceita').value && !document.getElementById('linkReceita').value;
 
 document.addEventListener('touchstart', (e) => {
-    // Só ativa o pull se estiver no TOPO da página
-    if (document.querySelector('.container').scrollTop === 0) {
-        pullStartY = e.touches[0].clientY;
-        isPulling = true;
-    }
-});
-
-document.addEventListener('touchmove', (e) => {
-    if (isPulling && document.querySelector('.container').scrollTop === 0) {
-        const currentY = e.touches[0].clientY;
-        const pullDistance = currentY - pullStartY;
-        
-        // Se puxou para baixo (pullDistance > 0), NÃO deixa a tela rolar
-        if (pullDistance > 0) {
-            e.preventDefault();
-        }
-    }
-});
+  if (noTopo() && podeAtualizar()) { pullStartY = e.touches[0].clientY; isPulling = true; }
+}, { passive: true });
 
 document.addEventListener('touchend', (e) => {
-    if (isPulling && document.querySelector('.container').scrollTop === 0) {
-        const pullEndY = e.changedTouches[0].clientY;
-        const pullDistance = pullEndY - pullStartY;
-        
-        if (pullDistance > 80) {
-            window.location.reload(true);
-        }
-    }
-    isPulling = false;
-    pullStartY = 0;
-});
+  if (isPulling && noTopo() && e.changedTouches[0].clientY - pullStartY > 80) window.location.reload();
+  isPulling = false;
+  pullStartY = 0;
+}, { passive: true });
 </script>
 
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/cookbook/sw.js')  // ← caminho completo
+    navigator.serviceWorker.register('./sw.js')
       .then(registration => {
         console.log('ServiceWorker registrado:', registration.scope);
       })
