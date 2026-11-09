@@ -3,29 +3,6 @@ const CATEGORIAS_PADRAO = Object.freeze([
 'Café', 'Doces', 'Drinks', 'Especial', 'Jantar', 'Petiscos', 'Salgados', 'Saudável'
 ]);
 
-window.addEventListener('unhandledrejection', function(event) {
-if (event.reason &&
-event.reason.message &&
-(event.reason.message.includes('fail is not a function') ||
-event.reason.message.includes('webintent'))) {
-console.warn("WebIntent interceptado e silenciado");
-event.preventDefault();
-event.stopPropagation();
-}
-});
-
-window.addEventListener('error', function(event) {
-if (event.error &&
-event.error.message &&
-(event.error.message.includes('fail is not a function') ||
-event.error.message.includes('webintent'))) {
-console.warn("⚠️ Erro global síncrono do WebIntent interceptado");
-event.preventDefault();
-event.stopPropagation();
-}
-return false;
-});
-
 let receitas = [];
 let categoriaAtual = '';
 let termoBusca = '';
@@ -35,83 +12,10 @@ let ultimaCategoria = null;
 let mapaIndicesReceitas = new Map();
 let modoFavoritos = false;
 
-function safeWebIntentCall(callback) {
-try {
-if (typeof callback !== 'function') return;
-if (!window.plugins?.webintent) return;
-callback();
-} catch (error) {
-// silenciado
-}
-}
-
-document.addEventListener('deviceready', function() {
-inicializar();
-configurarWebIntent();
-}, false);
-
 document.addEventListener('DOMContentLoaded', function() {
-if (!window.cordova) {
 inicializar();
-}
 capturarCompartilhamentoPWA();
 }, false);
-
-function tentarCapturarCompartilhamento(tentativa = 1) {
-if (!window.plugins?.webintent) return;
-safeWebIntentCall(() => {
-window.plugins.webintent.getExtra(window.plugins.webintent.EXTRA_TEXT, function(text) {
-if (text) { processarCompartilhamento(text); return; }
-safeWebIntentCall(() => {
-window.plugins.webintent.getUri(function(uri) {
-if (uri) { processarCompartilhamento(uri); return; }
-safeWebIntentCall(() => {
-window.plugins.webintent.getExtra(window.plugins.webintent.EXTRA_STREAM, function(stream) {
-if (stream) { processarCompartilhamentoComImagem({ extras: { 'android.intent.extra.STREAM': stream } }); return; }
-if (tentativa < 5) setTimeout(() => tentarCapturarCompartilhamento(tentativa + 1), 250);
-});
-});
-});
-});
-});
-});
-}
-
-function configurarWebIntent() {
-if (!window.plugins || !window.plugins.webintent) return;
-tentarCapturarCompartilhamento();
-}
-
-function processarCompartilhamento(intent) {
-let textoCompartilhado = '';
-if (typeof intent === 'string') {
-textoCompartilhado = intent;
-} else if (intent && intent.extras) {
-if (intent.extras['android.intent.extra.STREAM']) {
-processarCompartilhamentoComImagem(intent);
-return;
-}
-textoCompartilhado = intent.extras['android.intent.extra.TEXT'] ||
-intent.extras['android.intent.extra.SUBJECT'] ||
-intent.extras.text || '';
-}
-if (textoCompartilhado) {
-let nomeReceita = extrairNomeReceita(textoCompartilhado);
-let linkReceita = extrairLink(textoCompartilhado);
-const nomeInput = document.getElementById('nomeReceita');
-if (nomeReceita) {
-nomeInput.value = nomeReceita;
-nomeInput.placeholder = "Edite o nome da receita se quiser...";
-} else {
-nomeInput.value = '';
-nomeInput.placeholder = "Digite aqui o nome da receita...";
-}
-if (linkReceita) document.getElementById('linkReceita').value = linkReceita;
-destacarCamposPreenchidos();
-nomeInput.focus();
-mostrarMensagem('Link pronto! Confira o nome e escolha a categoria.', 'sucesso');
-}
-}
 
 const SITES_SEM_NOME = /(youtube\.com|youtu\.be|instagram\.com|facebook\.com|fb\.watch|tiktok\.com|pinterest\.)/i;
 
@@ -166,27 +70,6 @@ if (urlMatch && urlMatch[1]) return urlMatch[1];
 return '';
 }
 
-function processarCompartilhamentoComImagem(intent) {
-let textoCompartilhado = '';
-let streamLink = '';
-if (intent && intent.extras) {
-textoCompartilhado = intent.extras['android.intent.extra.TEXT'] ||
-intent.extras['android.intent.extra.SUBJECT'] ||
-intent.extras.text || '';
-streamLink = intent.extras['android.intent.extra.STREAM'] || '';
-}
-if (streamLink) {
-const nomeBase = textoCompartilhado || "Receita com Imagem";
-document.getElementById('nomeReceita').value = extrairNomeReceita(nomeBase);
-document.getElementById('linkReceita').value = streamLink;
-destacarCamposPreenchidos();
-document.getElementById('categoriaReceita').focus();
-mostrarMensagem('Imagem recebida! Confira o link e salve.', 'sucesso');
-return;
-}
-if (textoCompartilhado) processarCompartilhamento(textoCompartilhado);
-}
-
 function inicializar() {
   if (navigator.storage && navigator.storage.persist) {
     navigator.storage.persist().then(granted => {
@@ -215,7 +98,7 @@ function inicializar() {
 
 function normalizarLink(link) {
   link = String(link || '').trim();
-  if (!/^(https?|content|file):\/\//i.test(link)) link = 'https://' + link;
+  if (!/^https?:\/\//i.test(link)) link = 'https://' + link;
   return link;
 }
 
@@ -335,7 +218,6 @@ return String(str)
 function validarURL(url) {
 try {
 url = url.trim();
-if (url.startsWith('content://') || url.startsWith('file://')) return true;
 let urlParaValidar = url;
 if (!url.startsWith('http://') && !url.startsWith('https://')) urlParaValidar = 'https://' + url;
 new URL(urlParaValidar);
@@ -563,16 +445,7 @@ function abrirLink(index) {
   const receita = receitas[index];
   const url = receita && receita.link ? normalizarLink(receita.link) : '';
   if (!url || !validarURL(url)) { mostrarMensagem('Não deu para abrir o link.', 'erro'); return; }
-  if (window.cordova && cordova.InAppBrowser) {
-    if (/^https?:/i.test(url)) {
-      cordova.InAppBrowser.open(url, '_system');
-    } else if (window.plugins?.webintent?.startActivity) {
-      window.plugins.webintent.startActivity({ action: 'android.intent.action.VIEW', url: url },
-        function() {}, function() { mostrarMensagem('Não deu para abrir o arquivo.', 'erro'); });
-    } else { mostrarMensagem('Não deu para abrir o link.', 'erro'); }
-  } else {
-    window.open(url, '_blank', 'noopener');
-  }
+  window.open(url, '_blank', 'noopener');
 }
 
 function excluirReceita(index) {
@@ -674,37 +547,14 @@ const fileName = `cookbook${dia}${mes}${ano}${hora}${min}.json`;
 const dadosExportacao = { versao: "1.0", dataExportacao: new Date().toISOString(), totalReceitas: receitas.length, receitas: receitas };
 const jsonData = JSON.stringify(dadosExportacao, null, 2);
 const blob = new Blob([jsonData], { type: 'application/json' });
-if (window.cordova && cordova.file) {
-const directoryPath = cordova.file.externalRootDirectory + "Download/";
-window.resolveLocalFileSystemURL(directoryPath,
-function(dirEntry) { salvarArquivo(dirEntry, fileName, blob); },
-function() {
-window.resolveLocalFileSystemURL(cordova.file.externalRootDirectory,
-function(rootEntry) { rootEntry.getDirectory("Download", { create: true }, function(dirEntry) { salvarArquivo(dirEntry, fileName, blob); }, function() { mostrarMensagem("Não deu para salvar o arquivo.", "erro"); }); },
-function() { mostrarMensagem("Não deu para salvar o arquivo.", "erro"); }
-);
-});
-} else {
 try {
-const url = URL.createObjectURL(blob);
-const link = document.createElement('a');
-link.href = url; link.download = fileName; link.style.display = 'none';
-document.body.appendChild(link); link.click();
-setTimeout(() => { document.body.removeChild(link); URL.revokeObjectURL(url); }, 100);
-mostrarMensagem(`Pronto! Arquivo salvo: ${fileName}`, 'sucesso');
-} catch (error) { mostrarMensagem("Não deu para exportar.", "erro"); }
-}
-}
-
-function salvarArquivo(dirEntry, fileName, blob) {
-dirEntry.getFile(fileName, { create: true, exclusive: false },
-function(fileEntry) {
-fileEntry.createWriter(function(fileWriter) {
-fileWriter.onwriteend = function() { showPersistentModal(fileName); };
-fileWriter.onerror = function() { mostrarMensagem("Não deu para exportar.", "erro"); };
-fileWriter.write(blob);
-}, function() { mostrarMensagem("Não deu para exportar.", "erro"); });
-}, function() { mostrarMensagem("Não deu para exportar.", "erro"); });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url; link.download = fileName; link.style.display = 'none';
+  document.body.appendChild(link); link.click();
+  setTimeout(() => { document.body.removeChild(link); URL.revokeObjectURL(url); }, 100);
+  mostrarMensagem(`Pronto! Arquivo salvo: ${fileName}`, 'sucesso');
+} catch (error) { mostrarMensagem('Não deu para exportar.', 'erro'); }
 }
 
 function importarReceitas() {
@@ -792,30 +642,17 @@ if (e.key === 'Escape') fecharModal();
 });
 }
 
-function showPersistentModal(fileName) {
-const existingModal = document.querySelector('.custom-modal-overlay');
-if (existingModal) existingModal.remove();
-const overlay = document.createElement('div');
-overlay.style.cssText = `position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 10000; animation: fadeIn 0.3s ease;`;
-const modalContent = document.createElement('div');
-modalContent.style.cssText = `background: white; padding: 25px; border-radius: 12px; text-align: center; max-width: 80%; box-shadow: 0 4px 12px rgba(0,0,0,0.15); animation: slideUp 0.3s ease;`;
-modalContent.innerHTML = `<p style="font-size: 13px; line-height: 1.4;">Arquivo salvo em Downloads:<br><br><span style="color: #8d6e63; font-weight: 600;">${fileName}</span><br><br><span style="color: #5d4037; font-size: 12px;">💾 Guarde este arquivo para usar depois.</span></p>
-<div style="text-align: center; margin-top: 16px;"><button id="btnFecharModal" style="padding: 8px 16px; font-size: 14px; font-weight: 600; color: #6a4c93; background: #f3e5f5; border: 1px solid #ce93d8; border-radius: 8px;">OK</button></div>`;
-overlay.appendChild(modalContent);
-document.body.appendChild(overlay);
-document.getElementById('btnFecharModal').addEventListener('click', () => overlay.remove());
-}
-
 function capturarCompartilhamentoPWA() {
 const urlParams = new URLSearchParams(window.location.search);
 const title = urlParams.get('title');
 const text = urlParams.get('text');
 const sharedUrl = urlParams.get('url');
-let conteudo = title || text || sharedUrl || '';
-if (conteudo) {
+const tudo = [title, text, sharedUrl].filter(Boolean).join(' ');
+if (tudo) {
+history.replaceState(null, '', window.location.pathname);
 setTimeout(() => {
-const nomeReceita = extrairNomeReceita(conteudo);
-const linkReceita = extrairLink(conteudo) || sharedUrl || '';
+const nomeReceita = extrairNomeReceita(title) || extrairNomeReceita(text) || extrairNomeReceita(tudo);
+const linkReceita = extrairLink([sharedUrl, text, title].filter(Boolean).join(' '));
 if (nomeReceita) document.getElementById('nomeReceita').value = nomeReceita;
 if (linkReceita) document.getElementById('linkReceita').value = linkReceita;
 if (nomeReceita || linkReceita) {
