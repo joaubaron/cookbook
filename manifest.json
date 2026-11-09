@@ -3,7 +3,7 @@
   "short_name": "CookBook",
   "description": "Suas receitas favoritas em um só lugar",
   "lang": "pt-BR",
-  "id": "/cookbook/instalacao-2",
+  "id": "/cookbook",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
