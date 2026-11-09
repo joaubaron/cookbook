@@ -1,91 +1,52 @@
-const CACHE_VERSION = '16.07.2026-0923';
+const CACHE_VERSION = '09.11.2026-0850';
 const CACHE_NAME = `cookbook-${CACHE_VERSION}`;
+const BASE = self.registration.scope; // funciona em qualquer nome de pasta
 
 const APP_SHELL = [
-  '/cookbook/',
-  '/cookbook/index.html',
-  '/cookbook/style.css',
-  '/cookbook/script.js',
-  '/cookbook/manifest.json',
-  '/cookbook/receitas.png',
-  '/cookbook/cozinheiro.png',
-  '/cookbook/icons/icone-192.png',
-  '/cookbook/icons/icone-512.png',
-];
-
-const EXTERNAL_CACHE = [
-  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css'
-];
+  '', 'index.html', 'style.css', 'script.js', 'manifest.json',
+  'receitas.png', 'cozinheiro.png',
+  'icons/icon-152.png', 'icons/icone-192.png', 'icons/icone-512.png'
+].map(p => new URL(p, BASE).href);
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return Promise.allSettled(
-        [...APP_SHELL, ...EXTERNAL_CACHE].map(url =>
-          cache.add(url).catch(err => console.warn('Cache falhou para:', url, err))
-        )
-      );
-    }).then(() => self.skipWaiting())
+    caches.open(CACHE_NAME)
+      .then(cache => Promise.all(APP_SHELL.map(url => cache.add(url).catch(() => console.warn('Não guardou:', url)))))
+      .then(() => self.skipWaiting())
   );
 });
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((keyList) => {
-      return Promise.all(keyList.map((key) => {
-        if (key !== CACHE_NAME) {
-          console.log('Removendo cache antigo:', key);
-          return caches.delete(key);
-        }
-      }));
-    }).then(() => self.clients.claim())
+    caches.keys()
+      .then(chaves => Promise.all(chaves.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))))
+      .then(() => self.clients.claim())
   );
 });
 
+// Rede primeiro (sempre a versão nova), mas espera no máximo 3 segundos.
+// Sem internet ou com sinal fraco, usa o que está guardado.
+const comTempo = (promessa, ms) =>
+  Promise.race([promessa, new Promise((_, falha) => setTimeout(() => falha(new Error('lento')), ms))]);
+
 self.addEventListener('fetch', (event) => {
-  const url = new URL(event.request.url);
+  const req = event.request;
+  if (req.method !== 'GET') return;
+  const url = new URL(req.url);
+  if (url.origin !== self.location.origin) return;
 
-  if (event.request.method !== 'GET') return;
-  if (url.protocol === 'chrome-extension:') return;
-  if (url.hostname.includes('firebase')) return;
-  if (url.hostname.includes('google-analytics')) return;
+  const ehPagina = req.mode === 'navigate';
+  // Abrir pelo "compartilhar" (?title=...&text=...) usa sempre o mesmo index.html
+  const chave = ehPagina ? new URL('index.html', BASE).href : req.url;
 
-  const isAppShell = APP_SHELL.some(path => url.pathname === path || url.href === path);
-  const isExternal = EXTERNAL_CACHE.some(u => event.request.url.startsWith(u));
-
-  if (isExternal) {
-    event.respondWith(
-      caches.match(event.request).then(cached => {
-        return cached || fetch(event.request).then(response => {
-          if (response && response.status === 200) {
-            const clone = response.clone();
-            caches.open(CACHE_NAME).then(c => c.put(event.request, clone));
-          }
-          return response;
-        }).catch(() => cached);
-      })
-    );
-    return;
-  }
-
-  if (isAppShell) {
-    event.respondWith(
-      fetch(event.request)
-        .then(response => {
-          if (response && response.status === 200) {
-            const clone = response.clone();
-            caches.open(CACHE_NAME).then(c => c.put(event.request, clone));
-          }
-          return response;
-        })
-        .catch(() => {
-          return caches.match(event.request);
-        })
-    );
-    return;
-  }
-
-  event.respondWith(
-    fetch(event.request).catch(() => caches.match(event.request))
-  );
+  event.respondWith((async () => {
+    const cache = await caches.open(CACHE_NAME);
+    try {
+      const resp = await comTempo(fetch(ehPagina ? chave : req), 3000);
+      if (resp && resp.status === 200) event.waitUntil(cache.put(chave, resp.clone()));
+      return resp;
+    } catch (e) {
+      return (await cache.match(chave)) || Response.error();
+    }
+  })());
 });

@@ -55,25 +55,6 @@ if (!window.cordova) {
 inicializar();
 }
 capturarCompartilhamentoPWA();
-
-const btnLimpar = document.getElementById('btnLimparBusca');
-const campoBusca = document.getElementById('campoBusca');
-
-if (btnLimpar) {
-btnLimpar.addEventListener('click', function(e) {
-e.preventDefault();
-e.stopPropagation();
-});
-}
-
-if (campoBusca) {
-campoBusca.addEventListener('keydown', function(e) {
-if (e.key === 'Escape') {
-limparBusca();
-e.preventDefault();
-}
-});
-}
 }, false);
 
 function tentarCapturarCompartilhamento(tentativa = 1) {
@@ -128,45 +109,45 @@ nomeInput.placeholder = "Digite aqui o nome da receita...";
 if (linkReceita) document.getElementById('linkReceita').value = linkReceita;
 destacarCamposPreenchidos();
 nomeInput.focus();
-mostrarMensagem('Link detectado! Dê um nome para sua receita e selecione a categoria.', 'sucesso');
+mostrarMensagem('Link pronto! Confira o nome e escolha a categoria.', 'sucesso');
 }
 }
 
+const SITES_SEM_NOME = /(youtube\.com|youtu\.be|instagram\.com|facebook\.com|fb\.watch|tiktok\.com|pinterest\.)/i;
+
+function nomeDoLink(url) {
+  try {
+    const u = new URL(url);
+    if (SITES_SEM_NOME.test(u.hostname)) return '';
+    for (const chave of ['nome', 'title', 'recipe']) {
+      const v = u.searchParams.get(chave);
+      if (v && v.trim().length >= 3) return capitalizarTitulo(v.replace(/[-_]+/g, ' ').trim());
+    }
+    let slug = decodeURIComponent(u.pathname.split('/').filter(Boolean).pop() || '');
+    slug = slug.replace(/\.[a-z0-9]{2,5}$/i, '');
+    const palavras = slug.split(/[-_\s]+/).filter(p => /[a-zà-ú]{2,}/i.test(p));
+    if (palavras.length < 2) return '';
+    return capitalizarTitulo(slug.replace(/[-_]+/g, ' ').trim());
+  } catch (e) { return ''; }
+}
+
 function extrairNomeReceita(texto) {
-if (!texto || texto.trim() === '') return '';
-let titulo = texto;
-try {
-titulo = titulo.replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '').trim();
-} catch (e) {}
-titulo = titulo.replace(/[\n\r\t]+/g, " ").replace(/\s{2,}/g, " ").trim();
-const urlMatch = titulo.match(/https?:\/\/[^\s]+/);
-if (urlMatch && titulo.trim() === urlMatch[0]) return '';
-const slugMatch = titulo.match(/\/([a-z0-9\-_%]+?)(?:\.[a-z]+)?(?:$|[?#])/i);
-if (slugMatch && slugMatch[1]) {
-let slug = slugMatch[1].replace(/-/g, " ").replace(/_/g, " ").replace(/%20/g, " ").replace(/\d+/g, "").trim();
-if (slug.length >= 3) return capitalizarTitulo(slug);
-}
-const paramMatch = titulo.match(/(?:nome|title|recipe|r|q)=([^&]+)/i);
-if (paramMatch && paramMatch[1]) {
-let param = decodeURIComponent(paramMatch[1]).replace(/-/g, " ").replace(/_/g, " ").replace(/%20/g, " ").trim();
-if (param.length >= 3) return capitalizarTitulo(param);
-}
-const ruidos = ["receita", "receitas", "como fazer", "passo a passo", "tutorial",
-"aprenda", "fácil", "facil", "simples", "rápido", "rapido",
-"perfeito", "perfeita", "melhor", "2024", "2023", "2022", "completo", "o melhor", "a melhor", "vídeo", "video"];
-ruidos.forEach(ruido => { titulo = titulo.replace(new RegExp(`\\b${ruido}\\b`, 'gi'), ''); });
-titulo = titulo.replace(/\s{2,}/g, " ").trim();
-const youtubeMatch = titulo.match(/[-–—]?\s*([^|\n]*?)(?:\s*[-–—]?\s*YouTube|\s*[-–—]?\s*\||\s*https?:\/\/|$)/i);
-if (youtubeMatch && youtubeMatch[1].trim()) {
-let nome = youtubeMatch[1].trim().replace(/[-–—,:;.]+$/, '').trim();
-if (nome.length >= 3) return capitalizarTitulo(nome);
-}
-const receitaMatch = titulo.match(/(?:Receita de|Como fazer|Tutorial)\s+(.+?)(?:\s*[-–—]|\s*\||\s*https?:\/\/|$)/i);
-if (receitaMatch && receitaMatch[1].trim()) return capitalizarTitulo(receitaMatch[1].trim());
-const primeiraLinha = titulo.split('\n')[0].trim();
-if (primeiraLinha && primeiraLinha.length >= 3 && primeiraLinha.length < 80 &&
-!primeiraLinha.match(/^https?:\/\/[^\s]+$/)) return capitalizarTitulo(primeiraLinha);
-return "";
+  if (!texto || !String(texto).trim()) return '';
+  let t = String(texto);
+  try { t = t.replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, ''); } catch (e) {}
+  t = t.replace(/\s+/g, ' ').trim();
+  const url = (t.match(/https?:\/\/[^\s]+/i) || [''])[0];
+  let nome = t.replace(/https?:\/\/[^\s]+/gi, ' ').split('|')[0];
+  nome = nome.replace(/[\s\-–—]*\b(YouTube|Instagram|Facebook|TikTok|Pinterest)\b[\s\-–—]*$/i, '');
+  nome = nome.replace(/^\s*(receita d[eao]s?|como fazer|passo a passo|tutorial)\s+/i, '');
+  ['o melhor', 'a melhor', 'melhor', 'fácil', 'facil', 'simples', 'rápido', 'rapido', 'perfeito', 'perfeita', 'completo', 'vídeo', 'video']
+    .forEach(r => { nome = nome.replace(new RegExp(`\\b${r}\\b`, 'gi'), ''); });
+  nome = nome.replace(/\b20\d\d\b/g, '').replace(/\s{2,}/g, ' ').replace(/^[\s\-–—,:;.]+|[\s\-–—,:;.]+$/g, '');
+  if (nome.length >= 3) {
+    if (nome.length > 70) nome = nome.slice(0, 70).replace(/\s+\S*$/, '');
+    return capitalizarTitulo(nome);
+  }
+  return url ? nomeDoLink(url) : '';
 }
 
 function capitalizarTitulo(texto) {
@@ -200,15 +181,12 @@ document.getElementById('nomeReceita').value = extrairNomeReceita(nomeBase);
 document.getElementById('linkReceita').value = streamLink;
 destacarCamposPreenchidos();
 document.getElementById('categoriaReceita').focus();
-mostrarMensagem('Conteúdo com imagem detectado! Verifique o link e salve.', 'sucesso');
+mostrarMensagem('Imagem recebida! Confira o link e salve.', 'sucesso');
 return;
 }
 if (textoCompartilhado) processarCompartilhamento(textoCompartilhado);
 }
 
-// ============================================================
-// CORREÇÃO 1: inicializar() — persist() ANTES de carregar dados
-// ============================================================
 function inicializar() {
   if (navigator.storage && navigator.storage.persist) {
     navigator.storage.persist().then(granted => {
@@ -235,22 +213,47 @@ function inicializar() {
   }, 50);
 }
 
-// ============================================================
-// CORREÇÃO 2: persistirReceitas() — salva principal + backup
-// ============================================================
-function persistirReceitas() {
-  const json = JSON.stringify(receitas);
-  localStorage.setItem('receitas', json);
-  try {
-    localStorage.setItem('receitas_backup', json);
-  } catch (e) {
-    console.warn('Backup não pôde ser atualizado:', e);
-  }
+function normalizarLink(link) {
+  link = String(link || '').trim();
+  if (!/^(https?|content|file):\/\//i.test(link)) link = 'https://' + link;
+  return link;
 }
 
-// ============================================================
-// CORREÇÃO 3: carregarReceitas() — nunca apaga dados em erro
-// ============================================================
+function normalizarLista(lista) {
+  return lista
+    .filter(r => r && typeof r.nome === 'string')
+    .map(r => ({
+      ...r,
+      link: typeof r.link === 'string' ? r.link : '',
+      categoria: CATEGORIAS_PADRAO.includes(r.categoria) ? r.categoria : 'Especial',
+      favorito: r.favorito === true
+    }));
+}
+
+function resetarBuscaVisual() {
+  const campo = document.getElementById('campoBusca');
+  const btn = document.getElementById('btnLimparBusca');
+  if (campo) { campo.value = ''; campo.classList.remove('busca-ativa'); }
+  if (btn) btn.style.display = 'none';
+  termoBusca = '';
+  modoBusca = false;
+  document.body.classList.remove('modo-busca');
+}
+
+function persistirReceitas() {
+  const json = JSON.stringify(receitas);
+  try {
+    localStorage.setItem('receitas', json);
+  } catch (e) {
+    console.error('Erro ao salvar:', e);
+    mostrarMensagem('Não deu para salvar. O aparelho está sem espaço.', 'erro');
+    return false;
+  }
+  try { localStorage.setItem('receitas_backup', json); }
+  catch (e) { console.warn('Backup não pôde ser atualizado:', e); }
+  return true;
+}
+
 function carregarReceitas() {
   const CHAVE_PRINCIPAL = 'receitas';
   const CHAVE_BACKUP    = 'receitas_backup';
@@ -264,9 +267,9 @@ function carregarReceitas() {
         const parsed = JSON.parse(backup);
         if (Array.isArray(parsed) && parsed.length > 0) {
           console.warn('Dados principais vazios, restaurando backup...');
-          receitas = parsed.map(r => ({ ...r, favorito: r.favorito ?? false }));
+          receitas = normalizarLista(parsed);
           localStorage.setItem(CHAVE_PRINCIPAL, JSON.stringify(receitas));
-          mostrarMensagem('Dados restaurados do backup automático.', 'sucesso');
+          mostrarMensagem('Suas receitas foram recuperadas.', 'sucesso');
           invalidarCache();
           mostrarReceitas();
           return;
@@ -281,7 +284,7 @@ function carregarReceitas() {
     const parsed = JSON.parse(dados);
     if (!Array.isArray(parsed)) throw new Error('Dados corrompidos: não é um array');
 
-    receitas = parsed.map(r => ({ ...r, favorito: r.favorito ?? false }));
+    receitas = normalizarLista(parsed);
 
     if (receitas.length > 0) {
       try { localStorage.setItem(CHAVE_BACKUP, JSON.stringify(receitas)); }
@@ -295,9 +298,9 @@ function carregarReceitas() {
       if (backup) {
         const parsed = JSON.parse(backup);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          receitas = parsed.map(r => ({ ...r, favorito: r.favorito ?? false }));
+          receitas = normalizarLista(parsed);
           localStorage.setItem(CHAVE_PRINCIPAL, JSON.stringify(receitas));
-          mostrarMensagem('⚠️ Dados corrompidos. Backup restaurado!', 'sucesso');
+          mostrarMensagem('Houve um problema, mas suas receitas foram recuperadas.', 'sucesso');
           invalidarCache();
           mostrarReceitas();
           return;
@@ -306,7 +309,7 @@ function carregarReceitas() {
     } catch (backupErr) {
       console.error('Backup também falhou:', backupErr);
     }
-    mostrarMensagem('⚠️ Erro ao ler dados. Importe seu backup JSON.', 'erro');
+    mostrarMensagem('Não deu para abrir suas receitas. Toque em Importar e escolha seu arquivo de backup.', 'erro');
   }
 
   invalidarCache();
@@ -318,8 +321,8 @@ const nomeInput = document.getElementById('nomeReceita');
 const linkInput = document.getElementById('linkReceita');
 if (nomeInput.value) nomeInput.classList.add('campo-preenchido');
 if (linkInput.value) linkInput.classList.add('campo-preenchido');
-nomeInput.addEventListener('input', function() { this.classList.remove('campo-preenchido'); });
-linkInput.addEventListener('input', function() { this.classList.remove('campo-preenchido'); });
+nomeInput.addEventListener('input', function() { this.classList.remove('campo-preenchido'); }, { once: true });
+linkInput.addEventListener('input', function() { this.classList.remove('campo-preenchido'); }, { once: true });
 document.body.classList.add('modo-compartilhamento');
 }
 
@@ -379,7 +382,6 @@ const linkInput = document.getElementById('linkReceita');
 if (nomeInput) nomeInput.classList.remove('campo-preenchido');
 if (linkInput) linkInput.classList.remove('campo-preenchido');
 modoFavoritos = false;
-if (btnFavoritos) btnFavoritos.textContent = "❤️";
 categoriaAtual = '';
 criarAbasCategorias();
 mostrarReceitas();
@@ -402,15 +404,12 @@ const nome = document.getElementById('nomeReceita').value.trim();
 let link = document.getElementById('linkReceita').value.trim();
 const categoria = document.getElementById('categoriaReceita').value;
 if (!nome || !link || !categoria) {
-mostrarMensagem('Finalize os campos Nome, Link e Categoria e depois Salve...', 'erro');
+mostrarMensagem('Preencha nome, link e categoria.', 'erro');
 return;
 }
-if (!link.startsWith('content://') && !link.startsWith('file://') &&
-!link.startsWith('http://') && !link.startsWith('https://')) {
-link = 'https://' + link;
-}
+link = normalizarLink(link);
 if (!validarURL(link)) {
-mostrarMensagem('Por favor, insira uma URL válida!', 'erro');
+mostrarMensagem('Esse link não parece certo.', 'erro');
 return;
 }
 const receitaExistente = receitas.find(r => r.nome.toLowerCase() === nome.toLowerCase());
@@ -420,25 +419,26 @@ return;
 }
 const novaReceita = { nome, link, categoria, data: new Date().toISOString(), favorito: false };
 receitas.unshift(novaReceita);
-persistirReceitas(); // CORRIGIDO
+persistirReceitas();
+modoFavoritos = false;
+resetarBuscaVisual();
 document.getElementById('formReceita').reset();
 invalidarCache();
 document.body.classList.remove('modo-compartilhamento');
 categoriaAtual = categoria;
 criarAbasCategorias();
 mostrarReceitas();
-const btn = document.querySelector('.btn-primary');
+const btn = document.querySelector('#formReceita button[type="submit"]');
 const textoOriginal = btn.textContent;
 btn.textContent = 'Salvo';
 setTimeout(() => { btn.textContent = textoOriginal; }, 1500);
-mostrarMensagem('Receita salva com sucesso!', 'sucesso');
+mostrarMensagem('Receita salva!', 'sucesso');
 }
 
 function filtrarPorCategoria(cat) {
 categoriaAtual = categoriaAtual === cat ? '' : cat;
 modoFavoritos = false;
 const btnFavoritos = document.getElementById("btnFavoritos");
-if (btnFavoritos) btnFavoritos.textContent = "❤️";
 criarAbasCategorias();
 mostrarReceitas();
 }
@@ -473,7 +473,19 @@ ultimaCategoria = categoriaAtual;
 return cacheReceitasOrdenadas;
 }
 
+function atualizarBotaoFavoritos() {
+  const btn = document.getElementById('btnFavoritos');
+  if (!btn) return;
+  btn.classList.toggle('ativo', modoFavoritos);
+  btn.setAttribute('aria-pressed', modoFavoritos ? 'true' : 'false');
+}
+
 function mostrarReceitas() {
+  desenharReceitas();
+  atualizarBotaoFavoritos();
+}
+
+function desenharReceitas() {
 const lista = document.getElementById('listaReceitas');
 const listaCard = document.getElementById('listaCard');
 const stats = document.getElementById('stats');
@@ -483,25 +495,24 @@ if (!lista || !listaCard || !stats) return;
 if (modoBusca && termoBusca) {
 const resultados = buscarReceitas(termoBusca).sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
 modoFavoritos = false;
-if (btnFavoritos) btnFavoritos.textContent = "❤️";
 if (resultados.length === 0) {
 lista.innerHTML = `<div class="empty-state"><div class="empty-state-icon">🔍</div><p class="empty-state-text">Nenhuma receita encontrada</p></div>`;
-stats.innerHTML = `<div class="busca-stats">Busca: "${termoBusca}" - 0 resultados</div>`;
+stats.innerHTML = `<div class="busca-stats">Busca: "${escapeHTML(termoBusca)}" - 0 resultados</div>`;
 listaCard.style.display = 'block'; listaCard.style.padding = '25px'; return;
 }
 listaCard.style.display = 'block'; listaCard.style.padding = '15px 25px';
-stats.innerHTML = `<div class="busca-stats">🔍 Busca: "${termoBusca}" - ${resultados.length} ${resultados.length === 1 ? 'resultado' : 'resultados'}<button onclick="limparBusca()" style="margin-left: 10px; background: none; border: none; color: #6a4c93; cursor: pointer; font-size: 0.6em;">[clique para limpar]</button></div>`;
+stats.innerHTML = `<div class="busca-stats">🔍 Busca: "${escapeHTML(termoBusca)}" - ${resultados.length} ${resultados.length === 1 ? 'resultado' : 'resultados'}<button onclick="limparBusca()" style="margin-left: 10px; background: none; border: none; color: #6a4c93; cursor: pointer; font-size: 0.6em;">limpar</button></div>`;
 lista.innerHTML = resultados.map((r) => {
 const indexOriginal = mapaIndicesReceitas.get(r);
 return `<div class="receita-linha resultado-busca busca-destaque">
 <div class="favorito-star" onclick="toggleFavorito(${indexOriginal})" style="cursor:pointer; font-size:18px; margin-right:6px;">${r.favorito ? '❤️' : '🤍'}</div>
 <div class="receita-info">
-<a href="#" onclick="abrirLink('${escapeHTML(r.link)}'); return false;" class="receita-nome">${destacarTexto(r.nome, termoBusca)}</a>
+<a href="#" onclick="abrirLink(${indexOriginal}); return false;" class="receita-nome">${destacarTexto(r.nome, termoBusca)}</a>
 <span class="receita-categoria">${destacarTexto(r.categoria, termoBusca)}</span>
 </div>
 <div class="receita-actions">
-<button class="btn-rename" onclick="renomearReceita(${indexOriginal})" title="Renomear"><i class="fa-solid fa-pen"></i></button>
-<button class="btn-delete" onclick="excluirReceita(${indexOriginal})" title="Excluir"><i class="fa-solid fa-trash"></i></button>
+<button class="btn-rename" onclick="renomearReceita(${indexOriginal})" title="Renomear">✏️</button>
+<button class="btn-delete" onclick="excluirReceita(${indexOriginal})" title="Excluir">🗑️</button>
 </div></div>`;
 }).join('');
 return;
@@ -539,31 +550,34 @@ const indexOriginal = mapaIndicesReceitas.get(r);
 return `<div class="receita-linha">
 <div class="favorito-star" onclick="toggleFavorito(${indexOriginal})" style="cursor:pointer; font-size:12px; margin-right:6px;">${r.favorito ? '❤️' : '🤍'}</div>
 <div class="receita-info">
-<a href="#" onclick="abrirLink('${escapeHTML(r.link)}'); return false;" class="receita-nome">${escapeHTML(r.nome)}</a>
+<a href="#" onclick="abrirLink(${indexOriginal}); return false;" class="receita-nome">${escapeHTML(r.nome)}</a>
 </div>
 <div class="receita-actions">
-<button class="btn-rename" onclick="renomearReceita(${indexOriginal})" title="Renomear"><i class="fa-solid fa-pen"></i></button>
-<button class="btn-delete" onclick="excluirReceita(${indexOriginal})" title="Excluir"><i class="fa-solid fa-trash"></i></button>
+<button class="btn-rename" onclick="renomearReceita(${indexOriginal})" title="Renomear">✏️</button>
+<button class="btn-delete" onclick="excluirReceita(${indexOriginal})" title="Excluir">🗑️</button>
 </div></div>`;
 }).join('');
 }
 
-function abrirLink(url) {
-if (window.cordova && cordova.InAppBrowser) {
-if (url.startsWith('http')) {
-cordova.InAppBrowser.open(url, "_system");
-} else {
-if (window.plugins?.webintent && window.plugins.webintent.startActivity) {
-window.plugins.webintent.startActivity({ action: 'android.intent.action.VIEW', url: url },
-function() {}, function(e) { mostrarMensagem('Não foi possível abrir o arquivo/URI local.', 'erro'); });
-} else { mostrarMensagem('Não foi possível abrir o link.', 'erro'); }
-}
-} else { window.open(url, "_system"); }
+function abrirLink(index) {
+  const receita = receitas[index];
+  const url = receita && receita.link ? normalizarLink(receita.link) : '';
+  if (!url || !validarURL(url)) { mostrarMensagem('Não deu para abrir o link.', 'erro'); return; }
+  if (window.cordova && cordova.InAppBrowser) {
+    if (/^https?:/i.test(url)) {
+      cordova.InAppBrowser.open(url, '_system');
+    } else if (window.plugins?.webintent?.startActivity) {
+      window.plugins.webintent.startActivity({ action: 'android.intent.action.VIEW', url: url },
+        function() {}, function() { mostrarMensagem('Não deu para abrir o arquivo.', 'erro'); });
+    } else { mostrarMensagem('Não deu para abrir o link.', 'erro'); }
+  } else {
+    window.open(url, '_blank', 'noopener');
+  }
 }
 
 function excluirReceita(index) {
 const receita = receitas[index];
-if (!receita) { mostrarMensagem("Erro: Receita não encontrada.", "erro"); return; }
+if (!receita) { mostrarMensagem("Receita não encontrada.", "erro"); return; }
 const overlay = document.createElement('div');
 overlay.className = 'custom-modal-overlay';
 overlay.style.cssText = `position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 10000; animation: fadeIn 0.3s ease;`;
@@ -579,12 +593,12 @@ document.body.appendChild(overlay);
 document.getElementById('btnCancelar').addEventListener('click', () => overlay.remove());
 document.getElementById('btnConfirmar').addEventListener('click', () => {
 const receitaExcluida = receitas.splice(index, 1)[0];
-persistirReceitas(); // CORRIGIDO
+persistirReceitas();
 invalidarCache();
 criarAbasCategorias();
 mostrarReceitas();
 overlay.remove();
-mostrarMensagem(`"${receitaExcluida.nome}" foi excluída com sucesso!`, 'sucesso');
+mostrarMensagem(`"${receitaExcluida.nome}" foi excluída.`, 'sucesso');
 });
 }
 
@@ -609,7 +623,6 @@ campoBusca.classList.add('busca-ativa');
 document.body.classList.add('modo-busca');
 modoBusca = true;
 modoFavoritos = false;
-if (btnFavoritos) btnFavoritos.textContent = "❤️";
 } else {
 btnLimpar.style.display = 'none';
 campoBusca.classList.remove('busca-ativa');
@@ -650,7 +663,7 @@ receita.categoria.toLowerCase().includes(termo) ||
 }
 
 function exportarReceitas() {
-if (receitas.length === 0) { mostrarMensagem("Nenhuma receita para exportar.", "erro"); return; }
+if (receitas.length === 0) { mostrarMensagem("Você ainda não tem receitas.", "erro"); return; }
 const now = new Date();
 const dia = String(now.getDate()).padStart(2, '0');
 const mes = String(now.getMonth() + 1).padStart(2, '0');
@@ -667,8 +680,8 @@ window.resolveLocalFileSystemURL(directoryPath,
 function(dirEntry) { salvarArquivo(dirEntry, fileName, blob); },
 function() {
 window.resolveLocalFileSystemURL(cordova.file.externalRootDirectory,
-function(rootEntry) { rootEntry.getDirectory("Download", { create: true }, function(dirEntry) { salvarArquivo(dirEntry, fileName, blob); }, function() { mostrarMensagem("Erro ao acessar sistema de arquivos.", "erro"); }); },
-function() { mostrarMensagem("Erro no sistema de arquivos.", "erro"); }
+function(rootEntry) { rootEntry.getDirectory("Download", { create: true }, function(dirEntry) { salvarArquivo(dirEntry, fileName, blob); }, function() { mostrarMensagem("Não deu para salvar o arquivo.", "erro"); }); },
+function() { mostrarMensagem("Não deu para salvar o arquivo.", "erro"); }
 );
 });
 } else {
@@ -678,8 +691,8 @@ const link = document.createElement('a');
 link.href = url; link.download = fileName; link.style.display = 'none';
 document.body.appendChild(link); link.click();
 setTimeout(() => { document.body.removeChild(link); URL.revokeObjectURL(url); }, 100);
-mostrarMensagem(`Arquivo "${fileName}" exportado com sucesso!`, 'sucesso');
-} catch (error) { mostrarMensagem("Erro ao exportar receitas.", "erro"); }
+mostrarMensagem(`Pronto! Arquivo salvo: ${fileName}`, 'sucesso');
+} catch (error) { mostrarMensagem("Não deu para exportar.", "erro"); }
 }
 }
 
@@ -688,10 +701,10 @@ dirEntry.getFile(fileName, { create: true, exclusive: false },
 function(fileEntry) {
 fileEntry.createWriter(function(fileWriter) {
 fileWriter.onwriteend = function() { showPersistentModal(fileName); };
-fileWriter.onerror = function() { mostrarMensagem("Erro ao exportar receitas", "erro"); };
+fileWriter.onerror = function() { mostrarMensagem("Não deu para exportar.", "erro"); };
 fileWriter.write(blob);
-}, function() { mostrarMensagem("Erro ao exportar receitas", "erro"); });
-}, function() { mostrarMensagem("Erro ao exportar receitas", "erro"); });
+}, function() { mostrarMensagem("Não deu para exportar.", "erro"); });
+}, function() { mostrarMensagem("Não deu para exportar.", "erro"); });
 }
 
 function importarReceitas() {
@@ -700,45 +713,44 @@ if (fileInput) fileInput.click();
 }
 
 function processarImportacao(event) {
-const file = event.target.files[0];
-if (!file) { mostrarMensagem("Nenhum arquivo selecionado.", "erro"); return; }
-const reader = new FileReader();
-reader.onload = function(e) {
-try {
-const dados = JSON.parse(e.target.result);
-let receitasParaImportar = null;
-let importadasComSucesso = 0;
-let ignoradasPorDuplicação = 0;
-if (dados && typeof dados === 'object' && Array.isArray(dados.receitas)) {
-receitasParaImportar = dados.receitas;
-} else if (Array.isArray(dados)) {
-receitasParaImportar = dados;
-}
-if (receitasParaImportar) {
-const receitasExistentes = JSON.parse(localStorage.getItem('receitas')) || [];
-const novasReceitas = receitasParaImportar.map(r => {
-const nomeNormalizado = r.nome?.toLowerCase();
-const linkNormalizado = r.link?.toLowerCase();
-if (!nomeNormalizado || !linkNormalizado) { ignoradasPorDuplicação++; return null; }
-const existe = receitasExistentes.find(e => e.nome.toLowerCase() === nomeNormalizado && e.link.toLowerCase() === linkNormalizado);
-if (existe) { ignoradasPorDuplicação++; return null; }
-importadasComSucesso++;
-return { nome: r.nome, link: r.link, categoria: r.categoria || 'Especial', data: r.data || new Date().toISOString(), favorito: r.favorito ?? false };
-}).filter(r => r !== null);
-const todasReceitas = [...receitasExistentes, ...novasReceitas];
-receitas = todasReceitas;
-persistirReceitas(); // CORRIGIDO
-invalidarCache();
-criarAbasCategorias();
-mostrarReceitas();
-mostrarMensagem(`Importação concluída: ${importadasComSucesso} adicionada(s), ${ignoradasPorDuplicação} ignorada(s).`, 'sucesso');
-} else {
-mostrarMensagem("Arquivo inválido.", "erro");
-}
-} catch (err) { mostrarMensagem("Erro ao importar. Verifique o arquivo.", "erro"); }
-event.target.value = '';
-};
-reader.readAsText(file);
+  const file = event.target.files[0];
+  if (!file) { mostrarMensagem('Nenhum arquivo escolhido.', 'erro'); return; }
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const dados = JSON.parse(e.target.result);
+      const lista = Array.isArray(dados) ? dados : (dados && Array.isArray(dados.receitas) ? dados.receitas : null);
+      if (!lista) {
+        mostrarMensagem('Esse arquivo não é de receitas.', 'erro');
+      } else {
+        const nomes = new Set(receitas.map(r => r.nome.toLowerCase()));
+        const novas = [];
+        let repetidas = 0, comProblema = 0;
+        lista.forEach(r => {
+          if (!r || typeof r.nome !== 'string' || typeof r.link !== 'string' || !r.nome.trim() || !r.link.trim()) { comProblema++; return; }
+          const nome = r.nome.trim();
+          const link = normalizarLink(r.link);
+          if (!validarURL(link)) { comProblema++; return; }
+          if (nomes.has(nome.toLowerCase())) { repetidas++; return; }
+          nomes.add(nome.toLowerCase());
+          novas.push({
+            nome, link,
+            categoria: CATEGORIAS_PADRAO.includes(r.categoria) ? r.categoria : 'Especial',
+            data: r.data || new Date().toISOString(),
+            favorito: r.favorito === true
+          });
+        });
+        receitas = [...receitas, ...novas];
+        persistirReceitas();
+        invalidarCache();
+        criarAbasCategorias();
+        mostrarReceitas();
+        mostrarMensagem(`Pronto! Novas: ${novas.length}. Já existiam: ${repetidas}. Com problema: ${comProblema}.`, 'sucesso');
+      }
+    } catch (err) { mostrarMensagem('Não deu para importar. Confira o arquivo.', 'erro'); }
+    event.target.value = '';
+  };
+  reader.readAsText(file);
 }
 
 function renomearReceita(index) {
@@ -763,16 +775,16 @@ const fecharModal = () => overlay.remove();
 document.getElementById('btnCancelarNome').addEventListener('click', fecharModal);
 document.getElementById('btnSalvarNome').addEventListener('click', () => {
 const novoNome = input.value.trim();
-if (!novoNome) { mostrarMensagem('O nome não pode estar em branco!', 'erro'); return; }
+if (!novoNome) { mostrarMensagem('Escreva um nome.', 'erro'); return; }
 const jaExiste = receitas.some((r, i) => i !== index && r.nome.toLowerCase() === novoNome.toLowerCase());
 if (jaExiste) { mostrarMensagem('Já existe uma receita com esse nome!', 'erro'); return; }
 receita.nome = novoNome;
-persistirReceitas(); // CORRIGIDO
+persistirReceitas();
 invalidarCache();
 criarAbasCategorias();
 mostrarReceitas();
 fecharModal();
-mostrarMensagem('Receita renomeada com sucesso!', 'sucesso');
+mostrarMensagem('Nome alterado!', 'sucesso');
 });
 input.addEventListener('keydown', e => {
 if (e.key === 'Enter') document.getElementById('btnSalvarNome').click();
@@ -787,7 +799,7 @@ const overlay = document.createElement('div');
 overlay.style.cssText = `position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 10000; animation: fadeIn 0.3s ease;`;
 const modalContent = document.createElement('div');
 modalContent.style.cssText = `background: white; padding: 25px; border-radius: 12px; text-align: center; max-width: 80%; box-shadow: 0 4px 12px rgba(0,0,0,0.15); animation: slideUp 0.3s ease;`;
-modalContent.innerHTML = `<p style="font-size: 13px; line-height: 1.4;">Receitas exportadas para Downloads como:<br><br><span style="color: #8d6e63; font-weight: 600;">${fileName}</span><br><br><span style="color: #5d4037; font-size: 12px;">💾 Salve este arquivo em local seguro para importar depois</span></p>
+modalContent.innerHTML = `<p style="font-size: 13px; line-height: 1.4;">Arquivo salvo em Downloads:<br><br><span style="color: #8d6e63; font-weight: 600;">${fileName}</span><br><br><span style="color: #5d4037; font-size: 12px;">💾 Guarde este arquivo para usar depois.</span></p>
 <div style="text-align: center; margin-top: 16px;"><button id="btnFecharModal" style="padding: 8px 16px; font-size: 14px; font-weight: 600; color: #6a4c93; background: #f3e5f5; border: 1px solid #ce93d8; border-radius: 8px;">OK</button></div>`;
 overlay.appendChild(modalContent);
 document.body.appendChild(overlay);
@@ -808,7 +820,7 @@ if (nomeReceita) document.getElementById('nomeReceita').value = nomeReceita;
 if (linkReceita) document.getElementById('linkReceita').value = linkReceita;
 if (nomeReceita || linkReceita) {
 destacarCamposPreenchidos();
-mostrarMensagem('Link detectado! Dê um nome para sua receita e selecione a categoria.', 'sucesso');
+mostrarMensagem('Link pronto! Confira o nome e escolha a categoria.', 'sucesso');
 }
 }, 500);
 }
@@ -818,22 +830,20 @@ function toggleFavorito(index) {
 const receita = receitas[index];
 if (!receita) return;
 receita.favorito = !receita.favorito;
-persistirReceitas(); // CORRIGIDO
+persistirReceitas();
 if (receita.favorito) {
 modoFavoritos = true;
 categoriaAtual = '';
-document.getElementById("btnFavoritos").textContent = "❤️";
 }
 mostrarReceitas();
 }
 
 function toggleFavoritos() {
-modoFavoritos = true;
-const btn = document.getElementById("btnFavoritos");
-categoriaAtual = '';
-criarAbasCategorias();
-btn.textContent = "❤️";
-mostrarReceitas();
+  if (modoBusca) { resetarBuscaVisual(); modoFavoritos = true; }
+  else { modoFavoritos = !modoFavoritos; }
+  categoriaAtual = '';
+  criarAbasCategorias();
+  mostrarReceitas();
 }
 
 document.addEventListener('keydown', function(e) {

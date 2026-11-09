@@ -8,7 +8,7 @@ body {
 font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
 min-height: 100vh;
-padding: 12px;
+padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
 }
 
 .container {
@@ -60,7 +60,7 @@ display: block;
 color: #8b3a3a;
 font-weight: normal;
 margin-bottom: 5px;
-font-size: 0.8em;
+font-size: 0.9em;
 }
 
 input[type="text"],
@@ -70,7 +70,7 @@ width: 100%;
 padding: 8px 10px;
 border: 1.5px solid #f0d0c0;
 border-radius: 8px;
-font-size: 12px;
+font-size: 16px;
 transition: all 0.3s;
 background: #fff9f5;
 }
@@ -128,7 +128,7 @@ border: 1.5px solid #f0d0c0;
 border-radius: 8px;
 background: white;
 color: #8b3a3a;
-font-size: 0.65em;
+font-size: 0.8em;
 font-weight: normal;
 cursor: pointer;
 transition: all 0.3s;
@@ -157,7 +157,7 @@ gap: 3px;
 
 .categoria-tab {
 padding: 3px 6px;
-font-size: 0.7em;
+font-size: 0.8em;
 min-width: calc(25% - 3px);
 }
 }
@@ -170,7 +170,6 @@ display: flex;
 justify-content: space-between;
 align-items: center;
 gap: 6px;
-cursor: grab;
 }
 
 .receita-info {
@@ -191,7 +190,7 @@ padding-bottom: 0;
 
 .receita-nome {
 color: #7a2e2e;
-font-size: 0.7em;
+font-size: 0.95em;
 font-weight: 600;
 display: block;
 text-decoration: none;
@@ -203,7 +202,7 @@ color: #ff6b6b;
 }
 
 .receita-categoria {
-font-size: 0.6em;
+font-size: 0.75em;
 color: #999;
 background: #f5f5f5;
 padding: 2px 6px;
@@ -224,7 +223,7 @@ margin-bottom: 10px;
 }
 
 .empty-state-text {
-font-size: 0.7em;
+font-size: 0.85em;
 color: #a0522d;
 white-space: nowrap;
 overflow: hidden;
@@ -238,18 +237,6 @@ color: #8b3a3a;
 font-weight: 600;
 margin-bottom: 12px;
 font-size: 0.8em;
-}
-
-/* === Debug === */
-.debug-info {
-background: #f0f0f0;
-padding: 6px;
-border-radius: 6px;
-margin-bottom: 10px;
-font-size: 0.75em;
-color: #666;
-max-height: 80px;
-overflow-y: auto;
 }
 
 @media (max-width: 480px) {
@@ -267,21 +254,29 @@ gap: 4px;
 
 .categoria-tab {
 padding: 4px 8px;
-font-size: 0.7em;
+font-size: 0.8em;
 }
 }
 
 /* === Botões compactos dentro do formulário === */
 .card form div button.btn.btn-primary {
 font-size: 10px;
-padding: 6px 8px;
+padding: 10px 4px;
 border-radius: 8px;
 }
 
 /* Remove destaque de foco */
 *:focus {
+outline: none;
+}
+
+*:focus-visible {
+outline: 2px solid #ff8c69;
+outline-offset: 2px;
+}
+
+.container:focus {
 outline: none !important;
-box-shadow: none !important;
 }
 
 /* === Botões de ação nas receitas (✏️ e 🗑️) === */
@@ -289,10 +284,11 @@ box-shadow: none !important;
 .receita-actions .btn-delete {
 background: none;
 border: none;
-font-size: 16px;
+font-size: 20px;
+min-width: 40px;
+min-height: 40px;
 cursor: pointer;
-transition: transform 0.2s ease, opacity 0.2s ease;
-margin-left: 6px;
+margin-left: 0;
 color: #7b519d;
 }
 
@@ -318,7 +314,7 @@ width: 100%;
 padding: 10px 40px 10px 12px;
 border: 1.5px solid #f0d0c0;
 border-radius: 8px;
-font-size: 12px;
+font-size: 16px;
 background: #fff9f5;
 transition: all 0.3s;
 }
@@ -472,16 +468,6 @@ padding: 1px 3px;
 }
 }
 
-.receita-actions i {
-color: #ff8c69; /* mesma cor para lápis e lixeira */
-font-size: 16px;
-transition: transform 0.2s ease, opacity 0.2s ease;
-}
-
-.receita-actions i:hover {
-color: #ff8c69;
-}
-
 /* Modo compartilhamento ativo */
 .modo-compartilhamento .card {
 border: 2px solid #6a4c93;
@@ -489,10 +475,10 @@ background: #f3e5f5;
 }
 
 .modo-compartilhamento .form-group {
-animation: pulse 2s infinite;
+animation: pulsar-suave 2s infinite;
 }
 
-@keyframes pulse {
+@keyframes pulsar-suave {
 0% { opacity: 1; }
 50% { opacity: 0.8; }
 100% { opacity: 1; }
@@ -519,4 +505,9 @@ html, body {
     height: 100%;
     width: 100%;
     -webkit-overflow-scrolling: touch;
+}
+
+/* Botão de favoritos ligado */
+.btn-primary.ativo {
+box-shadow: inset 0 0 0 2px #8b3a3a;
 }
