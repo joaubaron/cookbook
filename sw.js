@@ -1,4 +1,4 @@
-const CACHE_VERSION = '09.11.2026-0858';
+const CACHE_VERSION = '09.11.2026-0859';
 const CACHE_NAME = `cookbook-${CACHE_VERSION}`;
 const BASE = self.registration.scope; // funciona em qualquer nome de pasta
 
