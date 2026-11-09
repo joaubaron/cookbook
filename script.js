@@ -424,7 +424,7 @@ listaCard.style.display = 'block'; listaCard.style.padding = '25px'; return;
 
 listaCard.style.display = 'block'; listaCard.style.padding = '15px 25px';
 stats.textContent = modoFavoritos
-? `Você tem ${receitasFiltradas.length} ${receitasFiltradas.length === 1 ? 'receita' : 'receitas'} nos favoritos ❤️`
+? `❤️ ${receitasFiltradas.length} ${receitasFiltradas.length === 1 ? 'favorita' : 'favoritas'} de ${receitas.length} receitas`
 : `🍛 ${receitasFiltradas.length} ${receitasFiltradas.length === 1 ? 'receita' : 'receitas'} em ${categoriaAtual}`;
 
 lista.innerHTML = receitasFiltradas.map((r) => {
