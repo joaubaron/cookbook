@@ -4,7 +4,7 @@
   "description": "Suas receitas favoritas em um só lugar",
   "lang": "pt-BR",
   "id": "/cookbook/instalacao-2",
-  "start_url": "./",
+  "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "theme_color": "#ffeacf",
